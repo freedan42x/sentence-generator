@@ -1,21 +1,22 @@
 module Util where
 
-import           Data.Char                      ( isSpace )
-import           Data.List                      ( dropWhileEnd )
-import           Data.Function                  ( on )
-import           System.IO                      ( hFlush
-                                                , stdout
-                                                )
-import           System.Process                 ( system )
-import           System.Random                  ( randomRIO )
-import           System.Directory               ( removeFile )
-import           Control.Monad                  ( void )
+import           Data.Set                       ( Set )
+import qualified Data.Set                      as Set
+import           Data.Char
+import           Data.List
+import           System.IO
+import           System.Process
+import           System.Random
+import           System.Directory
+import           Control.Monad
+import           System.Info
 
 
+onWindows :: Bool
+onWindows = os == "mingw32"
 
 clearScreen :: IO ()
-clearScreen = void $ system "cls"
-
+clearScreen = void $ system $ if onWindows then "cls" else "clear"
 
 prompt :: String -> (String -> IO a) -> IO a
 prompt message f = do
@@ -23,53 +24,18 @@ prompt message f = do
   hFlush stdout
   getLine >>= f
 
-
-getLines :: IO [String]
-getLines = do
-  getLine >>= \case
-    "" -> pure []
-    s  -> (s :) <$> getLines
-
-
-prompts :: String -> ([String] -> IO a) -> IO a
-prompts message f = do
-  putStr message
-  hFlush stdout
-  getLines >>= f
-
-
-confirm :: IO ()
-confirm = prompt "[OK] " $ const $ pure ()
-
-
-choice :: [a] -> IO a
-choice xs = do
-  let len = length xs
-  num <- randomRIO (0, len - 1)
-  pure $ xs !! num
-
+choice :: Set a -> IO a
+choice v = do
+  i <- randomRIO (0, Set.size v - 1)
+  pure $ Set.elemAt i v
 
 trim :: String -> String
 trim = dropWhileEnd isSpace . dropWhile isSpace
 
-
-startsWith :: String -> String -> Bool
-startsWith "" _                       = True
-startsWith (x : xs) (y : ys) | x == y = startsWith xs ys
-startsWith _ _                        = False
-
-
-endsWith :: String -> String -> Bool
-endsWith = startsWith `on` reverse
-
-
-newtype Dupe a =
-  Dupe { getDupe :: (a, a)
-       }
-
-
 copyToClipboard :: String -> IO ()
 copyToClipboard text = do
-  writeFile "temp.txt" text
-  void $ system "type temp.txt | clip"
-  removeFile "temp.txt"
+  writeFile "temp" text
+  void $ system $ if onWindows
+    then "type temp | clip"
+    else "cat temp | xclip -selection clipboard"
+  removeFile "temp"
