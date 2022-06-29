@@ -79,12 +79,12 @@ generateCollection =
 
 rules :: [Chance]
 rules =
-  [ chance 12 (<> ",")
-  , chance 11 (<> ".")
+  [ chance 9 (<> ",")
+  , chance 8 (<> ".")
   -- , chance 3  (<> "!")
   , chance 2  (<> "...")
   , chance 3  (<> " —")
-  , chance 1  (\s -> "«" <> s <> "»")
+  -- , chance 1  (\s -> "«" <> s <> "»")
   , chance 1  (<> ";")
   , chance 1  (<> ":")
   -- , chance 3  (<> "?")
@@ -104,6 +104,11 @@ generateTextF f len = do
 generateText :: Int -> IO String
 generateText = generateTextF id
 
+
+generateChinese :: Int -> IO String
+generateChinese len = do
+  chars <- readFile "chinese"
+  replicateM len $ choice chars
 
 generateMenu :: [(String, String)] -> String
 generateMenu list =

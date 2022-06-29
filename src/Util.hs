@@ -2,6 +2,7 @@ module Util where
 
 import           Data.Char                      ( isSpace )
 import           Data.List                      ( dropWhileEnd )
+import           Data.Function                  ( on )
 import           System.IO                      ( hFlush
                                                 , stdout
                                                 )
@@ -13,7 +14,7 @@ import           Control.Monad                  ( void )
 
 
 clearScreen :: IO ()
-clearScreen = void $ system "clear"
+clearScreen = void $ system "cls"
 
 
 prompt :: String -> (String -> IO a) -> IO a
@@ -58,6 +59,10 @@ startsWith (x : xs) (y : ys) | x == y = startsWith xs ys
 startsWith _ _                        = False
 
 
+endsWith :: String -> String -> Bool
+endsWith = startsWith `on` reverse
+
+
 newtype Dupe a =
   Dupe { getDupe :: (a, a)
        }
@@ -65,6 +70,6 @@ newtype Dupe a =
 
 copyToClipboard :: String -> IO ()
 copyToClipboard text = do
-  writeFile "temp" text
-  void $ system "cat temp | xclip -selection clipboard"
-  removeFile "temp"
+  writeFile "temp.txt" text
+  void $ system "type temp.txt | clip"
+  removeFile "temp.txt"
